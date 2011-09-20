@@ -54,11 +54,22 @@ module RailsSqlViews
           WHERE name = '#{view}' AND NOT name = 'sqlite_sequence'
         SQL
         
-        (select_value(sql, name).gsub("CREATE VIEW #{view} AS ", "")) or raise "No view called #{view} found"
+        view_def = select_value(sql, name)
+        
+        if view_def
+          return convert_statement(view_def)
+        else
+          raise "No view called #{view} found"
+        end
       end
       
       def supports_view_columns_definition?
         false
+      end
+      
+      private
+      def convert_statement(s)
+        s.sub(/^CREATE.* AS (SELECT .*)/i, '\1')
       end
       
     end
